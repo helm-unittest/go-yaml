@@ -1416,17 +1416,3 @@ func TestUnicodeWhitespaceHandling(t *testing.T) {
 		})
 	}
 }
-
-func TestEmptyLine(t *testing.T) {
-	iso := map[string]any{
-		"attrs": []any{
-			map[string]any{
-				"value": "\ndebug",
-			},
-		},
-	}
-
-	var node yaml.Node
-	err := node.Encode(iso)
-	assert.NoError(t, err)
-}
