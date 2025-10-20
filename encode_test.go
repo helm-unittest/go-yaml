@@ -36,6 +36,7 @@ var marshalTests = []struct {
 	value any
 	data  string
 }{
+	// Basic types. First to validate handling newlines at the start.
 	{
 		nil,
 		"null\n",
@@ -135,6 +136,14 @@ var marshalTests = []struct {
 	{
 		map[string]any{"v": ""},
 		"v: \"\"\n",
+	},
+	{
+		map[string]any{"v": "\nhi"},
+		"v: |-\n\n    hi\n",
+	},
+	{
+		map[string][]any{"v": {map[string]any{"v1": "\nhi"}}},
+		"v:\n    - v1: |-\n\n        hi\n",
 	},
 	{
 		map[string][]string{"v": {"A", "B"}},
@@ -930,6 +939,18 @@ a:
       - c: 1
         d: 2
 `),
+
+	normal(`
+v:
+    - v1: |-
+
+        hi
+`): compact(`
+v:
+  - v1: |-
+
+        hi
+`),
 }
 
 func TestEncoderCompactIndents(t *testing.T) {
@@ -966,7 +987,7 @@ func TestNewLinePreserved(t *testing.T) {
 	data, err = yaml.Marshal(obj)
 	assert.NoError(t, err)
 	// the newline at the start of the file should be preserved
-	assert.Equal(t, "_: |4\n\n    a:\n            b:\n                    c: d\n", string(data))
+	assert.Equal(t, "_: |\n\n    a:\n            b:\n                    c: d\n", string(data))
 }
 
 func TestScalarStyleRules(t *testing.T) {
@@ -1394,4 +1415,18 @@ func TestUnicodeWhitespaceHandling(t *testing.T) {
 			assert.Equal(t, testCase.expected, string(data))
 		})
 	}
+}
+
+func TestEmptyLine(t *testing.T) {
+	iso := map[string]any{
+		"attrs": []any{
+			map[string]any{
+				"value": "\ndebug",
+			},
+		},
+	}
+
+	var node yaml.Node
+	err := node.Encode(iso)
+	assert.NoError(t, err)
 }

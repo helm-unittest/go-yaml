@@ -1871,7 +1871,9 @@ func (emitter *yamlEmitter) writeDoubleQuotedScalar(value []byte, allow_breaks b
 }
 
 func (emitter *yamlEmitter) writeBlockScalarHints(value []byte) bool {
-	if isSpace(value, 0) || isLineBreak(value, 0) {
+	if isSpace(value, 0) {
+		// https://github.com/yaml/go-yaml/issues/65
+		// isLineBreak(value, 0) removed as the linebreak will only write the indention value.
 		indent_hint := []byte{'0' + byte(emitter.best_indent)}
 		if !emitter.writeIndicator(indent_hint, false, false, false) {
 			return false
