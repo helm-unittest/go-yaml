@@ -36,7 +36,7 @@ var marshalTests = []struct {
 	value any
 	data  string
 }{
-	// Basic types. First to validate handling newlines at the start.
+	// Basic types.
 	{
 		nil,
 		"null\n",
@@ -137,6 +137,8 @@ var marshalTests = []struct {
 		map[string]any{"v": ""},
 		"v: \"\"\n",
 	},
+
+	// Issue 65: Validate handling newlines at the start.
 	{
 		map[string]any{"v": "\nhi"},
 		"v: |-\n\n    hi\n",
@@ -145,6 +147,8 @@ var marshalTests = []struct {
 		map[string][]any{"v": {map[string]any{"v1": "\nhi"}}},
 		"v:\n    - v1: |-\n\n        hi\n",
 	},
+
+	// Validate multiline strings.
 	{
 		map[string][]string{"v": {"A", "B"}},
 		"v:\n    - A\n    - B\n",
@@ -590,6 +594,18 @@ var marshalTests = []struct {
 			"foo": map[string]any{"bar": "a?bc"},
 		},
 		"foo:\n    bar: a?bc\n",
+	},
+
+	// issue https://github.com/yaml/go-yaml/issues/157
+	{
+		struct {
+			F string `yaml:"foo"` // the correct tag, because it has `yaml` prefix
+			B string `bar`        //nolint:govet // the incorrect tag, but supported
+		}{
+			F: "abc",
+			B: "def", // value should be set using whole tag as a name, see issue: <https://github.com/yaml/go-yaml/issues/157>
+		},
+		"foo: abc\nbar: def\n",
 	},
 }
 
